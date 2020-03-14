@@ -30,7 +30,7 @@ for ticker in test_stocks:
     #get the historical prices for this ticker
     tickerDF[ticker] = tickerData[ticker].history(period='1d', start='1980-1-1', end='2020-12-31')
  
-
+#for each ticker, calculate the various measures used for analysis
 for ticker in test_stocks: 
     tickerDF[ticker].loc[:,'sumDiv'] = tickerDF[ticker].loc[:,'Dividends'].cumsum()
     tickerDF[ticker].loc[:,'logDiff'] = np.log(tickerDF[ticker].loc[:,'Close']).diff()
@@ -49,9 +49,10 @@ for ticker in test_stocks:
     tickerDF[ticker].loc[:,'drawdown'] = tickerDF[ticker].loc[:,'Low'].rolling(15).min().shift(-15) < tickerDF[ticker].loc[:,'drawdownTrigger']
 
 
-
+#count what size square we'll need for plots
 squareSize = int(np.ceil(np.sqrt(len(test_stocks))))
 
+#set any basic preferences for plotting
 sns.set(style="darkgrid")
 
 fig = plt.figure(figsize=(9,9), dpi=300)
