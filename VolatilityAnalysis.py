@@ -17,7 +17,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 #Pick stocks for analysis
-test_stocks = ['SPY', 'TLT', 'IEF','TOTL','BSV','XLU','XLP','DEF']
+test_stocks = ['SPY', 'TLT', 'IEF','TOTL','BSV','XLU','XLP','DEF','QQQ','GLD','SPLV','MBB','QUAL','SPHD']
 tickerData = {}
 tickerDF = {}
 drawdownCutoff = {}
@@ -97,6 +97,5 @@ for i, ticker in enumerate(test_stocks):
     sns.regplot(x=inputTable.loc[:,'vol15'], y=inputTable.loc[:,'drawdown'],order=2, marker='o', color='xkcd:amethyst', scatter_kws={'s':1,'alpha':.1})
     sns.regplot(x=inputTable.loc[:,'vol5'], y=inputTable.loc[:,'drawdown'],order=2, marker='o', color='xkcd:deep blue', scatter_kws={'s':1,'alpha':.1})
 fig.tight_layout(rect=[0, 0.03, 1, 0.95])
-
 
 
