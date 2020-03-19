@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Portfolio Analysis
-todo: adjust for dividends
+todo: predict returns and vol from trailing levels, predict drawdown via logistic regression, train keras model to predict outputs
 
 """
 
@@ -15,6 +15,7 @@ import seaborn as sns
 from scipy.stats import norm
 import matplotlib
 import matplotlib.pyplot as plt
+import statsmodels.api as sm
 
 #Pick stocks for analysis
 test_stocks = ['SPY', 'TLT', 'IEF','TOTL','BSV','XLU','XLP','DEF','QQQ','GLD','SPLV','MBB','QUAL','SPHD']
@@ -99,4 +100,21 @@ for i, ticker in enumerate(test_stocks):
     sns.regplot(x=inputTable.loc[:,'vol5'], y=inputTable.loc[:,'drawdown'],order=2, marker='o', color='xkcd:deep blue', scatter_kws={'s':1,'alpha':.1})
 fig.tight_layout(rect=[0, 0.03, 1, 0.95])
 
+
+model_outputs = {}
+model_stats = {}
+for ticker in test_stocks:
+    model_outputs[ticker] = []
+    model_stats[ticker] = {}
+    model_data = tickerDF[ticker];
+    tmp_data = model_data.loc[:,['vol5','fwdVol15']].dropna()
+    X = sm.add_constant(tmp_data.loc[:,'vol5'])
+    Y = tmp_data.loc[:,'fwdVol15']
+    model = sm.OLS(Y,X)
+    results = model.fit()
+    (model_stats[ticker])['vol5_fwdVol15'] = results
+
+
+
+(model_stats['TLT'])['vol5_fwdVol15'].summary()
 
