@@ -107,6 +107,8 @@ for ticker in test_stocks:
     model_outputs[ticker] = []
     model_stats[ticker] = {}
     model_data = tickerDF[ticker];
+    
+    #vol5 -> fwd vol15
     tmp_data = model_data.loc[:,['vol5','fwdVol15']].dropna()
     X = sm.add_constant(tmp_data.loc[:,'vol5'])
     Y = tmp_data.loc[:,'fwdVol15']
@@ -114,7 +116,46 @@ for ticker in test_stocks:
     results = model.fit()
     (model_stats[ticker])['vol5_fwdVol15'] = results
 
+    #vol15 -> fwd vol15
+    tmp_data = model_data.loc[:,['vol15','fwdVol15']].dropna()
+    X = sm.add_constant(tmp_data.loc[:,'vol15'])
+    Y = tmp_data.loc[:,'fwdVol15']
+    model = sm.OLS(Y,X)
+    results = model.fit()
+    (model_stats[ticker])['vol15_fwdVol15'] = results
+
+    #vol30 -> fwd vol15
+    tmp_data = model_data.loc[:,['vol30','fwdVol15']].dropna()
+    X = sm.add_constant(tmp_data.loc[:,'vol30'])
+    Y = tmp_data.loc[:,'fwdVol15']
+    model = sm.OLS(Y,X)
+    results = model.fit()
+    (model_stats[ticker])['vol30_fwdVol15'] = results
+
+    #vol5 -> fwd15
+    tmp_data = model_data.loc[:,['vol5','fwd15']].dropna()
+    X = sm.add_constant(tmp_data.loc[:,'vol5'])
+    Y = tmp_data.loc[:,'fwd15']
+    model = sm.OLS(Y,X)
+    results = model.fit()
+    (model_stats[ticker])['vol5_fwd15'] = results
+
+    #vol15 -> fwd15
+    tmp_data = model_data.loc[:,['vol15','fwd15']].dropna()
+    X = sm.add_constant(tmp_data.loc[:,'vol15'])
+    Y = tmp_data.loc[:,'fwd15']
+    model = sm.OLS(Y,X)
+    results = model.fit()
+    (model_stats[ticker])['vol5_fwd15'] = results
+
+    #vol30 -> fwd15
+    tmp_data = model_data.loc[:,['vol30','fwd15']].dropna()
+    X = sm.add_constant(tmp_data.loc[:,'vol30'])
+    Y = tmp_data.loc[:,'fwd15']
+    model = sm.OLS(Y,X)
+    results = model.fit()
+    (model_stats[ticker])['vol30_fwd15'] = results
 
 
-(model_stats['TLT'])['vol5_fwdVol15'].summary()
+(model_stats['TLT'])['vol5_fwd15'].summary()
 
