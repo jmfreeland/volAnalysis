@@ -146,7 +146,7 @@ for ticker in test_stocks:
     Y = tmp_data.loc[:,'fwd15']
     model = sm.OLS(Y,X)
     results = model.fit()
-    (model_stats[ticker])['vol5_fwd15'] = results
+    (model_stats[ticker])['vol15_fwd15'] = results
 
     #vol30 -> fwd15
     tmp_data = model_data.loc[:,['vol30','fwd15']].dropna()
@@ -157,5 +157,17 @@ for ticker in test_stocks:
     (model_stats[ticker])['vol30_fwd15'] = results
 
 
-(model_stats['TLT'])['vol5_fwd15'].summary()
+(model_stats['TLT'])['vol30_fwd15'].summary()
+
+r_squared = pd.DataFrame()
+beta = pd.DataFrame()
+x_last = pd.DataFrame()
+for ticker in test_stocks:
+    for column in model_stats[ticker].keys():
+        r_squared.loc[ticker,column] = (model_stats[ticker])[column].rsquared
+        beta.loc[ticker,column] = (model_stats[ticker])[column].params[1]
+        x_last.loc[ticker,column] = (tickerDF[ticker].loc[:,(column.split('_'))[0]]).iloc[-1]
+        forecast.loc[ticker,column] = (model_stats[ticker])[column].predict([1, x_last.loc[ticker,column]])
+
+model_stats['TLT']['vol5_fwd15'].predict([1, 0])
 
