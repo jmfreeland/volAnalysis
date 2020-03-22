@@ -162,6 +162,7 @@ for ticker in test_stocks:
 r_squared = pd.DataFrame()
 beta = pd.DataFrame()
 x_last = pd.DataFrame()
+forecast = pd.DataFrame()
 for ticker in test_stocks:
     for column in model_stats[ticker].keys():
         r_squared.loc[ticker,column] = (model_stats[ticker])[column].rsquared
