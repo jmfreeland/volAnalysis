@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Portfolio Analysis
+Volatility and Return Analysis
 todo: predict returns and vol from trailing levels, predict drawdown via logistic regression, train keras model to predict outputs
 
 """
