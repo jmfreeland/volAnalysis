@@ -2,7 +2,7 @@
 """
 Portfolio Construction:
 Calculate approximate forward return and scale accepted risk up or down
-inputs: FRED data on spreads and total returns
+inputs: FRED data on spreads and total returns, MOVE Index, yield curve
 outputs: 
     
 """
