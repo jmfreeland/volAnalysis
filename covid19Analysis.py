@@ -37,7 +37,6 @@ confirmed = pd.read_csv('../COVID-19/csse_covid_19_data/csse_covid_19_time_serie
 confirmed_global = pd.read_csv('../COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv')
 recovered = pd.read_csv('../COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv')
 deaths = pd.read_csv('../COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv')
-
 #fit a global model
 
 global_population = 7794798739
@@ -87,13 +86,14 @@ plt.show()
 
 #fit individual country models
 #model_countries = ['Italy','Spain','United Kingdom', 'China', 'US']
-model_countries = ['Italy', 'US', 'Spain', 'China', 'United Kingdom']
+model_countries = ['Italy', 'US', 'Spain', 'China', 'United Kingdom', 'Korea, South']
 population = {}
 population['Italy'] = 60480000
 population['Spain'] = 46600000
 population['US'] = 327300000
 population['United Kingdom'] = 66400000
 population['China'] = 1386000000
+population['Korea, South'] = 51470000
 
 start_day = {}
 start_day['Italy'] = 31
@@ -101,6 +101,7 @@ start_day['US'] = 32
 start_day['Spain'] = 30
 start_day['China'] = 6
 start_day['United Kingdom'] = 30
+start_day['Korea, South'] = 10
 
 country_fit = {}
 country_active_cases = {}
@@ -122,10 +123,10 @@ for country in model_countries:
     
     days =  range(len(country_active.index))
     
-    ydata = np.array(country_active, dtype='float64')
+    ydata = np.array(country_active)
     ydata = ydata / population[country]
-    xdata = np.array(days, dtype='float64')
-    xdata_long = np.array(range(len(country_active.index)+20), dtype='float64')
+    xdata = np.array(days)
+    xdata_long = np.array(range(len(country_active.index)+20))
 
     xdata = xdata[start_day[country]:]
     ydata = ydata[start_day[country]:]
@@ -142,14 +143,18 @@ for country in model_countries:
 
     popt, pcov = optimize.curve_fit(temp_odeint, xdata, ydata, bounds=(0,np.inf), p0=[3,0])
     fitted = temp_odeint(xdata_long, *popt)
+    
+    peak = np.argmax(fitted)
+    print(country + ' Peak' + str(peak+start_day[country]))
 
     print(country + ' S0:' + str(country_S0[country]) + ' I0: ' + str(country_I0[country]) + ' R0: ' + str(country_R0[country]))
     print(xdata)
-    print(ydata)
+    #print(ydata)
     print(popt) 
 
     plt.figure()
     plt.plot(xdata, ydata, 'o')
     plt.plot(xdata_long, fitted)
+    plt.title(country)
     plt.yscale('linear')
         
