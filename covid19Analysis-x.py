@@ -80,26 +80,18 @@ print(popt)
 
 fitted = temp_odeint(xdata_long, *popt)
 
-plt.yscale('linear')
+plt.yscale('log')
 plt.plot(xdata, ydata, 'o')
 plt.plot(xdata_long, fitted)
 plt.show()
 
 #fit individual country models
-#model_countries = ['Italy','Spain','United Kingdom', 'China', 'US']
-model_countries = ['Italy', 'US', 'Spain', 'China']
+model_countries = ['China']
 population = {}
-population['Italy'] = 60480000
-population['Spain'] = 46600000
-population['US'] = 327300000
-population['United Kingdom'] = 66400000
+population['Italy'] = 60480000000
+population['US'] = 327300000000
+population['United Kingdom'] = 66400000000
 population['China'] = 1386000000
-
-start_day = {}
-start_day['Italy'] = 31
-start_day['US'] = 32
-start_day['Spain'] = 30
-start_day['China'] = 10
 
 country_fit = {}
 country_active_cases = {}
@@ -107,16 +99,14 @@ country_S0 = {}
 country_R0 = {}
 country_I0 = {}
 
-
-#find proper start dates for each
 for country in model_countries:
     country_cases = confirmed.loc[confirmed['Country/Region']==country].sum()
     country_recovered = recovered.loc[recovered['Country/Region']==country].sum()
     country_deaths = deaths.loc[deaths['Country/Region']==country].sum()
     country_active = 1 + country_cases[5:] - country_recovered[5:] - country_deaths[5:]
     country_active_cases[country] = country_active
-    country_R0[country] = (country_recovered[4+start_day[country]] + country_deaths[4+start_day[country]]) / population[country]
-    country_I0[country] = country_active[4+start_day[country]] / population[country] 
+    country_R0[country] = (country_recovered[4] + country_deaths[4]) / population[country]
+    country_I0[country] = country_active[4] / population[country] 
     country_S0[country] = 1 - country_R0[country] - country_I0[country]
     
     days =  range(len(country_active.index))
@@ -126,10 +116,6 @@ for country in model_countries:
     xdata = np.array(days, dtype='float64')
     xdata_long = np.array(range(len(country_active.index)+20), dtype='float64')
 
-    xdata = xdata[start_day[country]:]
-    ydata = ydata[start_day[country]:]
-    xdata_long = xdata_long[start_day[country]:]
-    
     N = 1.0
     # I0 = ydata[0]
     # S0 = N - I0
@@ -140,7 +126,7 @@ for country in model_countries:
         return fit_odeint((country_S0[country], country_I0[country], country_R0[country]), x, beta, gamma)
 
  
-    popt, pcov = optimize.curve_fit(temp_odeint, xdata, ydata, bounds=(0,np.inf), p0=[3,0])
+    popt, pcov = optimize.curve_fit(temp_odeint, xdata, ydata)
     fitted = temp_odeint(xdata_long, *popt)
 
     print(country + ' S0:' + str(country_S0[country]) + ' I0: ' + str(country_I0[country]) + ' R0: ' + str(country_R0[country]))
