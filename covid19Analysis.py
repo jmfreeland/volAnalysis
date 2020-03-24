@@ -12,13 +12,6 @@ import matplotlib.pyplot as plt
 from scipy import integrate, optimize
 
 
-# #ODE for timestep in SIR model
-# def sir_model(y, x, beta, gamma):
-#     S = -beta * y[1] * y[0] / N
-#     R = gamma * y[1]
-#     I = -(S + R)
-#     return S, I, R
-
 #ODE for timestep in SIR model
 def sir_model(y, x, beta, gamma):
     #initial conditions
@@ -32,9 +25,10 @@ def sir_model(y, x, beta, gamma):
     return S, I, R
 
 
+#fit a globla model, so far doesn't do wel
 #import data from hopkins set
 confirmed = pd.read_csv('../COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv')
-confirmed_global = pd.read_csv('../COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv')
+#confirmed_global = pd.read_csv('../COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv')
 recovered = pd.read_csv('../COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv')
 deaths = pd.read_csv('../COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv')
 #fit a global model
@@ -55,17 +49,13 @@ ydata = np.array(active_cases_global, dtype=float)
 ydata = ydata / global_population
 xdata = np.array(days, dtype=float)
 xdata_long = np.array(range(200), dtype=float)
-#xdata_long = np.array(range(len(active_cases_global.index)+50), dtype=float)
 
 N = 1.0
 I0 = ydata[0]
 R0 = recovered_cases_global[0]/global_population
 S0 = N - I0 - R0
-# #add initial conditions to definition
-# def fit_odeint(x, beta, gamma):
-#     return integrate.odeint(sir_model, (S0, I0, R0), x, args=(beta, gamma))[:,1]
 
-#add initial conditions to definition
+#add initial conditions to definition. return integrated ODE for Infected cases
 def fit_odeint(initial, x, beta, gamma):
     return integrate.odeint(sir_model, initial, x, args=(beta, gamma))[:,1]
 
@@ -73,8 +63,11 @@ def fit_odeint(initial, x, beta, gamma):
 def temp_odeint(x, beta, gamma):
     return fit_odeint((S0, I0, R0), x, beta, gamma)
 
-popt, pcov = optimize.curve_fit(temp_odeint, xdata, ydata, p0=[0.1,0.1])
-#popt, pcov = optimize.curve_fit(fit_odeint, xdata, ydata, p0=[0.0,0.0])
+#fit the curve using actual data
+popt, pcov = optimize.curve_fit(temp_odeint, xdata, ydata, p0=[5,5])
+print("Global N: " + str(N), ' S0' + str(S0) + ' I0: ' + str(I0) + 'R0: ' + str(R0))
+print(xdata)
+print(ydata) 
 print(popt)
 
 fitted = temp_odeint(xdata_long, *popt)
