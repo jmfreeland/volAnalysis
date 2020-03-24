@@ -67,27 +67,30 @@ population['United Kingdom'] = 66400000000
 population['China'] = 1386000000
 
 country_fit = {}
-
+country_active_cases = {}
 for country in model_countries:
-    country_cases = confirmed_data.loc[confirmed_global['Country/Region']==country].sum()
-    country_cases = country_cases[5:]
-    #print(country_cases)
-    days =  range(len(country_cases.index))
+    country_cases = confirmed.loc[confirmed['Country/Region']==country].sum()
+    country_recovered = recovered.loc[recovered['Country/Region']==country].sum()
+    country_deaths = deaths.loc[deaths['Country/Region']==country].sum()
+    country_active = country_cases[5:] - country_recovered[5:] - country_deaths[5:]
+    country_active_cases[country] = country_active
+    days =  range(len(country_active.index))
     
-    ydata = np.array(country_cases, dtype=float)
+    ydata = np.array(country_active, dtype=float)
     ydata = ydata / population[country]
     xdata = np.array(days, dtype=float)
-    xdata_long = np.array(range(len(country_cases.index)*2), dtype=float)
+    xdata_long = np.array(range(len(country_active.index)+20), dtype=float)
 
     N = 1.0
     I0 = ydata[0]
     S0 = N - I0
-    R0 = 2
+    R0 = 3
     
     popt, pcov = optimize.curve_fit(fit_odeint, xdata, ydata)
     fitted = fit_odeint(xdata_long, *popt)
 
     plt.plot(xdata, ydata, 'o')
     plt.plot(xdata_long, fitted)
+    plt.yscale('log')
     plt.show()
         
