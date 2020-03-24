@@ -80,14 +80,14 @@ print(popt)
 
 fitted = temp_odeint(xdata_long, *popt)
 
-plt.yscale('linear')
+plt.yscale('log')
 plt.plot(xdata, ydata, 'o')
 plt.plot(xdata_long, fitted)
 plt.show()
 
 #fit individual country models
 #model_countries = ['Italy','Spain','United Kingdom', 'China', 'US']
-model_countries = ['Italy', 'US', 'Spain', 'China']
+model_countries = ['Italy', 'US', 'Spain', 'China', 'United Kingdom']
 population = {}
 population['Italy'] = 60480000
 population['Spain'] = 46600000
@@ -99,7 +99,8 @@ start_day = {}
 start_day['Italy'] = 31
 start_day['US'] = 32
 start_day['Spain'] = 30
-start_day['China'] = 10
+start_day['China'] = 6
+start_day['United Kingdom'] = 30
 
 country_fit = {}
 country_active_cases = {}
@@ -139,7 +140,6 @@ for country in model_countries:
     def temp_odeint(x, beta, gamma):
         return fit_odeint((country_S0[country], country_I0[country], country_R0[country]), x, beta, gamma)
 
- 
     popt, pcov = optimize.curve_fit(temp_odeint, xdata, ydata, bounds=(0,np.inf), p0=[3,0])
     fitted = temp_odeint(xdata_long, *popt)
 
