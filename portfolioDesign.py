@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 Portfolio Construction:
-Calculate approximate forward return and scale accepted risk up or down
+Objective: Calculate approximate forward return and scale accepted risk up or down accordingly.
 inputs: FRED data on spreads and total returns, MOVE Index, yield curve, VIX and returns
-outputs: 
+outputs: Location of current spreads in historical range, forward return 
+            projections, spread change projections
     
 """
 
@@ -34,7 +35,6 @@ BBB_ICE_quantile = IG_ICE_data.loc[:,'BAMLC0A4CBBB'].rank(pct=True)[-1]
 print("ICE/BofA IG spreads of " + str(100*IG_ICE_data.loc[:,'BAMLC0A0CM'][-1]) + "bp are higher than " + '{:.1%}'.format(IG_ICE_quantile) + " of history (1919-current)")
 print("ICE/BofA BBB spreads of " + str(100*IG_ICE_data.loc[:,'BAMLC0A4CBBB'][-1]) + "bp are higher than " + '{:.1%}'.format(BBB_ICE_quantile) + " of history (1919-current)")
 #print("1yr. forward yield change from this level is typically: ")
-
 
 start = dt.datetime(1919, 1, 1)
 end = dt.date.today() 
