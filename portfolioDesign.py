@@ -26,6 +26,8 @@ start = dt.datetime(1919, 1, 1)
 end = dt.date.today() 
 IG_moodys_data = pdr.get_data_fred(['BAA','AAA'], start, end)
 IG_moodys_daily = pdr.get_data_fred(['DBAA','DAAA'], end + dt.timedelta(days=-7), end)
+sns.distplot(IG_moodys_data.loc[:,'BAA'], bins=50).set_title("Moody's Baa Yield Histogram, 1919-")
+sns.distplot(IG_moodys_data.loc[:,'AAA'], bins=50). set_title("Moody's Aaa Yield Histogram, 1919-")
 
 
 print("Moody's BBB yields are in the " + " percentile")
