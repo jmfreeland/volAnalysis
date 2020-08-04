@@ -6,10 +6,14 @@ inputs: FRED data on spreads and total returns, MOVE Index, yield curve, VIX and
 outputs: Location of current spreads in historical range, forward return 
             projections, spread change projections, volatility vs. volume/autocorrelation comparison
             -PCA Analysis
-ToDo: -Organize forward return model predictions into useful output
+ToDo: -Improve length of data
       -Calculate return estimates for spreads and yields
       -Consider other estimates like worst drawdown etc.
+      -Organize into subplots into a 1x4
     
+Rationale: Shoot for a target Sharpe ratio of 2. Accept volatility in proportion to estimated
+            returns available. As estimated return increases (assets are cheap), increase 
+            volatility target to allow for 2.0 sharpe. 
     
 """
 
@@ -25,6 +29,13 @@ import statsmodels.api as sm
 
 #initializations
 sns.set()
+
+
+#Get current risk free rate
+risk_free = pdr.get_data_fred(['USD3MTD156N'], dt.datetime(2020,1,1), dt.date.today())
+r = (risk_free.loc[:,'USD3MTD156N'].values)[-1]
+target_sharpe = 2
+
 
 #pull Investment Grade spreads, total return data from FRED 
 start = dt.datetime(1996, 1, 1)
@@ -79,7 +90,7 @@ prediction_data = {}
 model_outputs = {}
 model_stats = {}
 
-test_assets = ['^SP500TR','^GSPC'] #,'^XNDX','D1AR.DE']
+test_assets = ['^SP500TR','^GSPC','^IXIC'] #,'^XNDX','D1AR.DE']
 for ticker in test_assets:
     tickerData[ticker] = yf.Ticker(ticker)
     #get the historical prices for this ticker
@@ -149,6 +160,7 @@ for ticker in test_assets:
     fig.suptitle('10yr. Forward Return [' + ticker + '] vs. Equity Allocation')  
     
     
-    
-
-
+tenYr_return = model_stats['^SP500TR']['equityAlloc_10yrFwd'].predict([1, current_allocation])[0]
+annual_return = np.log(1+tenYr_return)/10
+excess_return_target = annual_return - r/100
+vol_target = excess_return_target / target_sharpe
