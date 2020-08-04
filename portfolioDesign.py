@@ -6,6 +6,10 @@ inputs: FRED data on spreads and total returns, MOVE Index, yield curve, VIX and
 outputs: Location of current spreads in historical range, forward return 
             projections, spread change projections, volatility vs. volume/autocorrelation comparison
             -PCA Analysis
+ToDo: -Organize forward return model predictions into useful output
+      -Calculate return estimates for spreads and yields
+      -Consider other estimates like worst drawdown etc.
+    
     
 """
 
@@ -91,44 +95,54 @@ for ticker in test_assets:
     model_outputs[ticker] = {}
     model_stats[ticker] = {}
 
+    current_allocation = equity_allocation[-1]
+    allocation_quantile = prediction_data[ticker].loc[:,'equity_allocation'].rank(pct=True)[-1]    
+    print('Equity allocation is higher than ' + '{:.1%}'.format(allocation_quantile) + ' of available data points for ' + ticker + '.')
        
-    print('Equity Allocation vs. 1yr Forward Returns')
+
+    print('\nEquity Allocation vs. Forward Returns:')
     tmp_data = prediction_data[ticker].loc[:,['equity_allocation','fwd1']].dropna()
     X = sm.add_constant(tmp_data.loc[:,'equity_allocation'])
     Y = tmp_data.loc[:,'fwd1']
     model = sm.OLS(Y,X)
     results = model.fit()
-    print("Equity Allocation of " + '{:.1%}'.format(prediction_data[ticker].loc[:,'equity_allocation'][-1]) + " are higher than ")  
+    print("Equity Allocation of " + '{:.1%}'.format(current_allocation) + " implies a 1yr return of " + '{:.1%}'.format(results.predict([1, current_allocation])[0]) + ' for ' + ticker)
     (model_stats[ticker])['equityAlloc_1yrFwd'] = results
     fig = plt.figure(figsize=(9,9), dpi=300)
     sns.regplot(x=X.iloc[:,1],y=Y)
     fig.suptitle('1yr. Forward Return [' + ticker + '] vs. Equity Allocation')  
 
+    
     tmp_data = prediction_data[ticker].loc[:,['equity_allocation','fwd3']].dropna()
     X = sm.add_constant(tmp_data.loc[:,'equity_allocation'])
     Y = tmp_data.loc[:,'fwd3']
     model = sm.OLS(Y,X)
+    print("Equity Allocation of " + '{:.1%}'.format(current_allocation) + " implies a 3yr return of " + '{:.1%}'.format(results.predict([1, current_allocation])[0]) + ' for ' + ticker)
     results = model.fit()
     (model_stats[ticker])['equityAlloc_3yrFwd'] = results
     fig = plt.figure(figsize=(9,9), dpi=300)
     sns.regplot(x=X.iloc[:,1],y=Y)
     fig.suptitle('3yr. Forward Return [' + ticker + '] vs. Equity Allocation')    
     
+    
     tmp_data = prediction_data[ticker].loc[:,['equity_allocation','fwd5']].dropna()
     X = sm.add_constant(tmp_data.loc[:,'equity_allocation'])
     Y = tmp_data.loc[:,'fwd5']
     model = sm.OLS(Y,X)
     results = model.fit()
+    print("Equity Allocation of " + '{:.1%}'.format(current_allocation) + " implies a 5yr return of " + '{:.1%}'.format(results.predict([1, current_allocation])[0]) + ' for ' + ticker)
     (model_stats[ticker])['equityAlloc_5yrFwd'] = results
     fig = plt.figure(figsize=(9,9), dpi=300)
     sns.regplot(x=X.iloc[:,1],y=Y)
     fig.suptitle('5yr. Forward Return [' + ticker + '] vs. Equity Allocation')    
     
+    print('\nEquity Allocation vs. 10yr Forward Returns')
     tmp_data = prediction_data[ticker].loc[:,['equity_allocation','fwd10']].dropna()
     X = sm.add_constant(tmp_data.loc[:,'equity_allocation'])
     Y = tmp_data.loc[:,'fwd10']
     model = sm.OLS(Y,X)
     results = model.fit()
+    print("Equity Allocation of " + '{:.1%}'.format(current_allocation) + " implies a 10yr return of " + '{:.1%}'.format(results.predict([1, current_allocation])[0]) + ' for ' + ticker)
     (model_stats[ticker])['equityAlloc_10yrFwd'] = results
     fig = plt.figure(figsize=(9,9), dpi=300)
     sns.regplot(x=X.iloc[:,1],y=Y)
