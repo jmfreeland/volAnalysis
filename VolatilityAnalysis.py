@@ -2,7 +2,10 @@
 """
 Volatility and Return Analysis
 todo: predict returns and vol from trailing levels, predict drawdown via logistic regression, train keras model to predict outputs
-
+-Create a volatilty-driven range that incorporates trailing volatility, volume, and prices. 
+-FFT amplitude & phase
+-modularize into a system for cleaning data, organizing data, identifying trends, identifying ranges, allocating risk, calculating fractal info
+-
 """
 
 #import external libraries
