@@ -17,18 +17,10 @@ ToDo: -Improve length of data
       -Consider other estimates like worst drawdown etc.
       -Organize into subplots into a 1x4
       -How much can you speed up FRED estimator?
-      -Where can you maximize sharpe in fixed income?
-      -What is forward volatility estimate based on model?
-      -Calculate highest sharpe fixed income
-      -Calculate implied vol premium/discount
-      -Pull in schiller CAPE
-      -Rolling vol analysis (rates, stocks, etc)
     
-Rationale: Shoot for a target Sharpe ratio of 2. Accept net long risk in proportion to estimated
+Rationale: Shoot for a target Sharpe ratio of 2. Accept volatility in proportion to estimated
             returns available. As estimated return increases (assets are cheap), increase 
             volatility target to allow for 2.0 sharpe. 
-            
-            
     
 """
 
@@ -41,16 +33,6 @@ import datetime as dt
 import matplotlib.pyplot as plt
 import yfinance as yf
 import statsmodels.api as sm
-import QuantLib as ql
-
-#function definitions
-def risk_budget(account_value):  
-    return [vol_target*account_value, vol_target*account_value*np.sqrt(252)]
-
-#function definitions
-def annual_return_equities():
-    return annual_return
-
 
 #initializations
 sns.set()
@@ -106,8 +88,8 @@ print("Moody's Aaa yields of " + '{:.1%}'.format(.01*IG_moodys_data.loc[:,'AAA']
 
 #Begin Equity Analysis
 FRED_equity_data = pdr.get_data_fred(['NCBEILQ027S','BCNSDODNS','CMDEBT','FGSDODNS','SLGSDODNS','FBCELLQ027S','DODFFSWCMI'], start, end)
+#(a+f)/1000)/(((a+f)/1000)+b+c+d+e+g)
 equity_allocation = ((FRED_equity_data.loc[:,'NCBEILQ027S']+FRED_equity_data.loc[:,'FBCELLQ027S'])/1000)/(((FRED_equity_data.loc[:,'NCBEILQ027S']+FRED_equity_data.loc[:,'FBCELLQ027S'])/1000)+FRED_equity_data.loc[:,'BCNSDODNS']+FRED_equity_data.loc[:,'CMDEBT']+FRED_equity_data.loc[:,'FGSDODNS']+FRED_equity_data.loc[:,'SLGSDODNS']+FRED_equity_data.loc[:,'DODFFSWCMI'])
-FRED_end_date = FRED_equity_data.index[-1] + dt.timedelta(days=90)
 
 tickerData = {}
 tickerDF = {}
@@ -131,15 +113,8 @@ for ticker in test_assets:
     model_outputs[ticker] = {}
     model_stats[ticker] = {}
 
-    #current_allocation = equity_allocation[-1]
-    print('Implying current allocation from S&P 500 Total Returns')
-    post_report = tickerDF['^SP500TR'].loc[tickerDF['^SP500TR'].index>FRED_end_date,'Close']
-    post_report_return = post_report[-1]/post_report[0]
-    last_report = FRED_equity_data.iloc[-1] 
-    current_allocation = ((last_report['NCBEILQ027S']*post_report_return+last_report['FBCELLQ027S']*post_report_return)/1000)/(((last_report['NCBEILQ027S']*post_report_return+last_report['FBCELLQ027S']*post_report_return)/1000)+last_report['BCNSDODNS']+last_report['CMDEBT']+last_report['FGSDODNS']+last_report['SLGSDODNS']+last_report['DODFFSWCMI'])
-
-    
-    allocation_quantile = prediction_data[ticker].loc[:,'equity_allocation'].append(pd.Series(current_allocation)).rank(pct=True).iloc[-1]    
+    current_allocation = equity_allocation[-1]
+    allocation_quantile = prediction_data[ticker].loc[:,'equity_allocation'].rank(pct=True)[-1]    
     print('\n*Equity allocation is higher than ' + '{:.1%}'.format(allocation_quantile) + ' of available data points for ' + ticker + '.')
        
 
@@ -194,80 +169,6 @@ for ticker in test_assets:
     
 tenYr_return = model_stats['^SP500TR']['equityAlloc_10yrFwd'].predict([1, current_allocation])[0]
 annual_return = np.log(1+tenYr_return)/10
-excess_return_prediction = annual_return - r/100
-vol_target = excess_return_prediction / target_sharpe
+excess_return_target = annual_return - r/100
+vol_target = excess_return_target / target_sharpe
     
-print('\n10yr forward return of S&P 500 annualizes to ' + '{:.1%}'.format(annual_return))
-print('Risk free rate is ' + '{:.2%}'.format(r/100))
-print('Excess return predictions is ' + '{:.2%}'.format(excess_return_prediction))
-print('Annual vol target for ' + str(target_sharpe) + ' sharpe is: ' + '{:.2%}'.format(vol_target))
-
-
-#Begin Interest Rate Analysis
-bond_yields = pdr.get_data_fred(['DGS2','DGS3','DGS5','DGS7','DGS10','DGS20','DGS30'], dt.datetime(1980,1,1), dt.datetime(1990,2,1))
-maturities = [(2,'DGS2'),(3,'DGS3'),(5,'DGS5'),(7,'DGS7'),(10,'DGS10'),(20,'DGS20'),(30,'DGS30')]
-
-duration = pd.DataFrame()
-# 1/bond_yields.loc[:,'DGS2'] * (1-1/(1+.5*bond_yields.loc[:,'DGS2'])**2*2)
-#ond_yields = bond_yields.dropna()
-#need to drop non-sequential days
-
-dayCount = ql.Thirty360()
-calendar = ql.UnitedStates()
-interpolation = ql.Linear()
-compounding = ql.Compounded
-compoundingFrequency = ql.Annual
-
-curve_point = (2,'DGS2')
-test_yields = bond_yields.loc[:,curve_point[1]].dropna()
-valid_indices = np.where((np.diff((test_yields.index).values).astype('timedelta64[D]').astype(int))<7)[0]
-valid_dates = test_yields.iloc[valid_indices]
-
-
-return_analysis = {}
-
-return_analysis[curve_point] = pd.DataFrame()
-for idx, eval_date in enumerate(valid_dates.index):
-    start = ql.Date(eval_date.day, eval_date.month, eval_date.year)
-    maturity = start+365*curve_point[0]
-    schedule = ql.MakeSchedule(start, maturity, ql.Period('6M'))
-    interest = ql.FixedRateLeg(schedule, ql.Actual365Fixed(), [100.], [test_yields.loc[eval_date]/100])
-    bond = ql.Bond(0, ql.UnitedStates(), start, interest)
-    rate = ql.InterestRate(test_yields.loc[eval_date]/100, ql.Actual365Fixed(), ql.Simple, ql.Annual)
-    open_price = ql.BondFunctions.cleanPrice(bond,rate,start)
-    next_location = valid_indices[idx]+1
-    rate_close = ql.InterestRate(test_yields.iloc[next_location]/100, ql.Actual365Fixed(), ql.Simple, ql.Annual)
-    close_price = ql.BondFunctions.cleanPrice(bond,rate_close,start+1)
-    price_return = close_price-open_price
-    carry = (test_yields.loc[eval_date] / 365)
-    total_return = price_return + carry
-    return_analysis[curve_point].loc[eval_date,'open_yield'] = test_yields.loc[eval_date]/100
-    return_analysis[curve_point].loc[eval_date,'close_yield'] = test_yields.iloc[next_location]/100
-    return_analysis[curve_point].loc[eval_date,'open_price'] = open_price
-    return_analysis[curve_point].loc[eval_date,'close_price'] = close_price
-    return_analysis[curve_point].loc[eval_date,'price_return'] = price_return
-    return_analysis[curve_point].loc[eval_date,'carry'] = carry
-    return_analysis[curve_point].loc[eval_date,'total_return'] = total_return
-    
-return_2y = (1+return_analysis[curve_point].loc[:,'total_return']/100).product()-1
-daily_vol_2y = (return_analysis[curve_point].loc[:,'total_return']/100).std()
-mean_return_2y = (return_analysis[curve_point].loc[:,'total_return']/100).mean()
-
-#diagnostics
-ql.BondFunctions.startDate(bond)
-ql.BondFunctions.maturityDate(bond)
-test_yields[eval_date]/100
-ql.BondFunctions.nextCashFlowDate(bond, start)
-ql.BondFunctions.nextCashFlowAmount(bond, start)
-rate
-
-ql.BondFunctions.
-ql.BondFunctions.cleanPrice(bond,rate,start)
-rate = ql.InterestRate(test_yields.loc[eval_date]/100, ql.Actual360(), ql.Compounded, ql.Annual)
-ql.BondFunctions.duration(bond,rate,ql.Duration.Modified,start)
-eval_date
-bond_yields.loc[eval_date,:]
-todaysDate
-
-rate = ql.InterestRate(.1326, ql.Actual365Fixed(), ql.Simple, ql.Annual)
-ql.BondFunctions.cleanPrice(bond,rate,start)

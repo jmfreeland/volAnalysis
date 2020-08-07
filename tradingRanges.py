@@ -12,7 +12,7 @@ todo: predict returns and vol from trailing levels, predict drawdown via logisti
 -Create a volatilty-driven range that incorporates trailing volatility, volume, and prices. 
 -FFT amplitude & phase over time
 -Hurst Exponent
-
+-Different speeds
 -
 """
 
