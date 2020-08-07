@@ -20,6 +20,7 @@ ToDo: -Improve length of data
       -Where can you maximize sharpe in fixed income?
       -What is forward volatility estimate based on model?
       -Calculate highest sharpe fixed income
+      -fix carry for multiple days between dates
       -Calculate implied vol premium/discount
       -Pull in schiller CAPE
       -Rolling vol analysis (rates, stocks, etc)
@@ -255,11 +256,8 @@ for curve_point in maturities:
         return_analysis[curve_point].loc[eval_date,'total_return'] = total_return
         return_analysis[curve_point].loc[eval_date,'abs_move'] = abs(total_return)
         
-return_2y = (1+return_analysis[curve_point].loc[:,'total_return']/100).product()-1
-daily_vol_2y = (return_analysis[curve_point].loc[:,'total_return']/100).std()
-mean_return_2y = (return_analysis[curve_point].loc[:,'total_return']/100).mean()
 
-#graph analyses
+#graph analyses - 2y
 fig = plt.figure(figsize=(9,9), dpi=300)
 sns.lineplot(data=return_analysis[(2,'DGS2')].loc[:,'total_return'])
 fig = plt.figure(figsize=(9,9), dpi=300)
@@ -267,7 +265,7 @@ sns.regplot(data=return_analysis[(2,'DGS2')], x='open_yield', y='total_return', 
 fig = plt.figure(figsize=(9,9), dpi=300)
 sns.regplot(data=return_analysis[(2,'DGS2')], x='open_yield', y='abs_move', fit_reg=True)
 
-#graph analyses
+#graph analyses - 5y
 fig = plt.figure(figsize=(9,9), dpi=300)
 sns.lineplot(data=return_analysis[(5,'DGS5')].loc[:,'total_return'])
 fig = plt.figure(figsize=(9,9), dpi=300)
@@ -275,13 +273,25 @@ sns.regplot(data=return_analysis[(5,'DGS5')], x='open_yield', y='total_return', 
 fig = plt.figure(figsize=(9,9), dpi=300)
 sns.regplot(data=return_analysis[(5,'DGS5')], x='open_yield', y='abs_move', fit_reg=True)
 
-#graph analyses
+#graph analyses - 10y
 fig = plt.figure(figsize=(9,9), dpi=300)
 sns.lineplot(data=return_analysis[(10,'DGS10')].loc[:,'total_return'])
 fig = plt.figure(figsize=(9,9), dpi=300)
 sns.regplot(data=return_analysis[(10,'DGS10')], x='open_yield', y='total_return', fit_reg=True)
 fig = plt.figure(figsize=(9,9), dpi=300)
 sns.regplot(data=return_analysis[(10,'DGS10')], x='open_yield', y='abs_move', fit_reg=True)
+
+#calculate return & vol stats [not entirely comparable]
+return_2y = (1+return_analysis[(2,'DGS2')].loc[:,'total_return']/100).product()-1
+return_5y = (1+return_analysis[(5,'DGS5')].loc[:,'total_return']/100).product()-1
+daily_vol_2y = (return_analysis[(2,'DGS2')].loc[:,'total_return']/100).std()
+daily_vol_5y = (return_analysis[(5,'DGS5')].loc[:,'total_return']/100).std()
+daily_vol_10y = (return_analysis[(10,'DGS10')].loc[:,'total_return']/100).std()
+mean_return_2y = (return_analysis[(2,'DGS2')].loc[:,'total_return']/100).mean()
+
+daily_vol_2y*np.sqrt(252)
+daily_vol_5y*np.sqrt(252)
+daily_vol_10y*np.sqrt(252)
 
 
 # #diagnostics
