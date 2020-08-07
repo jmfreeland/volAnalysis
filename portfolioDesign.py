@@ -23,6 +23,7 @@ ToDo: -Improve length of data
       -Calculate implied vol premium/discount
       -Pull in schiller CAPE
       -Rolling vol analysis (rates, stocks, etc)
+      -Correlate rates to price vol
     
 Rationale: Shoot for a target Sharpe ratio of 2. Accept net long risk in proportion to estimated
             returns available. As estimated return increases (assets are cheap), increase 
@@ -204,7 +205,7 @@ print('Annual vol target for ' + str(target_sharpe) + ' sharpe is: ' + '{:.2%}'.
 
 
 #Begin Interest Rate Analysis
-bond_yields = pdr.get_data_fred(['DGS2','DGS3','DGS5','DGS7','DGS10','DGS20','DGS30'], dt.datetime(1980,1,1), dt.datetime(1990,2,1))
+bond_yields = pdr.get_data_fred(['DGS2','DGS3','DGS5','DGS7','DGS10','DGS20','DGS30'], dt.datetime(1962,1,1), dt.datetime(2020,2,1))
 maturities = [(2,'DGS2'),(3,'DGS3'),(5,'DGS5'),(7,'DGS7'),(10,'DGS10'),(20,'DGS20'),(30,'DGS30')]
 
 duration = pd.DataFrame()
@@ -225,49 +226,68 @@ valid_dates = test_yields.iloc[valid_indices]
 
 
 return_analysis = {}
-
-return_analysis[curve_point] = pd.DataFrame()
-for idx, eval_date in enumerate(valid_dates.index):
-    start = ql.Date(eval_date.day, eval_date.month, eval_date.year)
-    maturity = start+365*curve_point[0]
-    schedule = ql.MakeSchedule(start, maturity, ql.Period('6M'))
-    interest = ql.FixedRateLeg(schedule, ql.Actual365Fixed(), [100.], [test_yields.loc[eval_date]/100])
-    bond = ql.Bond(0, ql.UnitedStates(), start, interest)
-    rate = ql.InterestRate(test_yields.loc[eval_date]/100, ql.Actual365Fixed(), ql.Simple, ql.Annual)
-    open_price = ql.BondFunctions.cleanPrice(bond,rate,start)
-    next_location = valid_indices[idx]+1
-    rate_close = ql.InterestRate(test_yields.iloc[next_location]/100, ql.Actual365Fixed(), ql.Simple, ql.Annual)
-    close_price = ql.BondFunctions.cleanPrice(bond,rate_close,start+1)
-    price_return = close_price-open_price
-    carry = (test_yields.loc[eval_date] / 365)
-    total_return = price_return + carry
-    return_analysis[curve_point].loc[eval_date,'open_yield'] = test_yields.loc[eval_date]/100
-    return_analysis[curve_point].loc[eval_date,'close_yield'] = test_yields.iloc[next_location]/100
-    return_analysis[curve_point].loc[eval_date,'open_price'] = open_price
-    return_analysis[curve_point].loc[eval_date,'close_price'] = close_price
-    return_analysis[curve_point].loc[eval_date,'price_return'] = price_return
-    return_analysis[curve_point].loc[eval_date,'carry'] = carry
-    return_analysis[curve_point].loc[eval_date,'total_return'] = total_return
+for curve_point in maturities:
+    test_yields = bond_yields.loc[:,curve_point[1]].dropna()
+    valid_indices = np.where((np.diff((test_yields.index).values).astype('timedelta64[D]').astype(int))<7)[0]
+    valid_dates = test_yields.iloc[valid_indices]
     
+    return_analysis[curve_point] = pd.DataFrame()
+    for idx, eval_date in enumerate(valid_dates.index):
+        start = ql.Date(eval_date.day, eval_date.month, eval_date.year)
+        maturity = start+365*curve_point[0]
+        schedule = ql.MakeSchedule(start, maturity, ql.Period('6M'))
+        interest = ql.FixedRateLeg(schedule, ql.Actual365Fixed(), [100.], [test_yields.loc[eval_date]/100])
+        bond = ql.Bond(0, ql.UnitedStates(), start, interest)
+        rate = ql.InterestRate(test_yields.loc[eval_date]/100, ql.Actual365Fixed(), ql.Simple, ql.Annual)
+        open_price = ql.BondFunctions.cleanPrice(bond,rate,start)
+        next_location = valid_indices[idx]+1
+        rate_close = ql.InterestRate(test_yields.iloc[next_location]/100, ql.Actual365Fixed(), ql.Simple, ql.Annual)
+        close_price = ql.BondFunctions.cleanPrice(bond,rate_close,start+1)
+        price_return = close_price-open_price
+        carry = (test_yields.loc[eval_date] / 365)
+        total_return = price_return + carry
+        return_analysis[curve_point].loc[eval_date,'open_yield'] = test_yields.loc[eval_date]/100
+        return_analysis[curve_point].loc[eval_date,'close_yield'] = test_yields.iloc[next_location]/100
+        return_analysis[curve_point].loc[eval_date,'open_price'] = open_price
+        return_analysis[curve_point].loc[eval_date,'close_price'] = close_price
+        return_analysis[curve_point].loc[eval_date,'price_return'] = price_return
+        return_analysis[curve_point].loc[eval_date,'carry'] = carry
+        return_analysis[curve_point].loc[eval_date,'total_return'] = total_return
+        return_analysis[curve_point].loc[eval_date,'abs_move'] = abs(total_return)
+        
 return_2y = (1+return_analysis[curve_point].loc[:,'total_return']/100).product()-1
 daily_vol_2y = (return_analysis[curve_point].loc[:,'total_return']/100).std()
 mean_return_2y = (return_analysis[curve_point].loc[:,'total_return']/100).mean()
 
-#diagnostics
-ql.BondFunctions.startDate(bond)
-ql.BondFunctions.maturityDate(bond)
-test_yields[eval_date]/100
-ql.BondFunctions.nextCashFlowDate(bond, start)
-ql.BondFunctions.nextCashFlowAmount(bond, start)
-rate
+#graph analyses
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.lineplot(data=return_analysis[(2,'DGS2')].loc[:,'total_return'])
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.regplot(data=return_analysis[(2,'DGS2')], x='open_yield', y='total_return', fit_reg=True)
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.regplot(data=return_analysis[(2,'DGS2')], x='open_yield', y='abs_move', fit_reg=True)
 
-ql.BondFunctions.
-ql.BondFunctions.cleanPrice(bond,rate,start)
-rate = ql.InterestRate(test_yields.loc[eval_date]/100, ql.Actual360(), ql.Compounded, ql.Annual)
-ql.BondFunctions.duration(bond,rate,ql.Duration.Modified,start)
-eval_date
-bond_yields.loc[eval_date,:]
-todaysDate
+#graph analyses
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.lineplot(data=return_analysis[(5,'DGS5')].loc[:,'total_return'])
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.regplot(data=return_analysis[(5,'DGS5')], x='open_yield', y='total_return', fit_reg=True)
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.regplot(data=return_analysis[(5,'DGS5')], x='open_yield', y='abs_move', fit_reg=True)
 
-rate = ql.InterestRate(.1326, ql.Actual365Fixed(), ql.Simple, ql.Annual)
-ql.BondFunctions.cleanPrice(bond,rate,start)
+#graph analyses
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.lineplot(data=return_analysis[(10,'DGS10')].loc[:,'total_return'])
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.regplot(data=return_analysis[(10,'DGS10')], x='open_yield', y='total_return', fit_reg=True)
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.regplot(data=return_analysis[(10,'DGS10')], x='open_yield', y='abs_move', fit_reg=True)
+
+
+# #diagnostics
+# ql.BondFunctions.startDate(bond)
+# ql.BondFunctions.maturityDate(bond)
+# test_yields[eval_date]/100
+# ql.BondFunctions.nextCashFlowDate(bond, start)
+# ql.BondFunctions.nextCashFlowAmount(bond, start)
+
