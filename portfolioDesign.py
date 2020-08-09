@@ -273,6 +273,14 @@ sns.regplot(data=return_analysis[(5,'DGS5')], x='open_yield', y='total_return', 
 fig = plt.figure(figsize=(9,9), dpi=300)
 sns.regplot(data=return_analysis[(5,'DGS5')], x='open_yield', y='abs_move', fit_reg=True)
 
+#graph analyses - 7y
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.lineplot(data=return_analysis[(7,'DGS7')].loc[:,'total_return'])
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.regplot(data=return_analysis[(7,'DGS7')], x='open_yield', y='total_return', fit_reg=True)
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.regplot(data=return_analysis[(7,'DGS7')], x='open_yield', y='abs_move', fit_reg=True)
+
 #graph analyses - 10y
 fig = plt.figure(figsize=(9,9), dpi=300)
 sns.lineplot(data=return_analysis[(10,'DGS10')].loc[:,'total_return'])
@@ -280,6 +288,23 @@ fig = plt.figure(figsize=(9,9), dpi=300)
 sns.regplot(data=return_analysis[(10,'DGS10')], x='open_yield', y='total_return', fit_reg=True)
 fig = plt.figure(figsize=(9,9), dpi=300)
 sns.regplot(data=return_analysis[(10,'DGS10')], x='open_yield', y='abs_move', fit_reg=True)
+
+#graph analyses - 20y
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.lineplot(data=return_analysis[(20,'DGS20')].loc[:,'total_return'])
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.regplot(data=return_analysis[(20,'DGS20')], x='open_yield', y='total_return', fit_reg=True)
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.regplot(data=return_analysis[(20,'DGS20')], x='open_yield', y='abs_move', fit_reg=True)
+
+#graph analyses - 30y
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.lineplot(data=return_analysis[(30,'DGS30')].loc[:,'total_return'])
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.regplot(data=return_analysis[(30,'DGS30')], x='open_yield', y='total_return', fit_reg=True)
+fig = plt.figure(figsize=(9,9), dpi=300)
+sns.regplot(data=return_analysis[(30,'DGS30')], x='open_yield', y='abs_move', fit_reg=True)
+
 
 #calculate return & vol stats [not entirely comparable]
 return_2y = (1+return_analysis[(2,'DGS2')].loc[:,'total_return']/100).product()-1
