@@ -20,6 +20,8 @@ todo: predict returns and vol from trailing levels, predict drawdown via logisti
 -seasonality by asset?
 -logistic regression model
 -vol driven trend signal?
+-defensive/offensive outperformance switching a la ATAC fund
+-implied vol discount
 """
 
 #import external libraries
@@ -36,33 +38,51 @@ import statsmodels.api as sm
 from statsmodels.regression.rolling import RollingOLS
 from statsmodels.tsa.stattools import adfuller
 import nolds
+import pickle
 
-def fractionalWeights(k, d):
-    w = np.array([1.0], dtype=float)
-    for i in range(1,k):
-        w = np.append(w, -1*w[i-1]*((d-i+1)/i))
-    print(w.sum())
-    return w
+import fracDiffTest as frac
 
-#sum asymptotically approaches 0. It is 1 + series of negative numbers
-def fractionalWeightsCutoff(d, cutoff):
-    w = np.array([1.0], dtype=float)
-    i=1
-    while (w.sum()>cutoff):
-        w = np.append(w, -1*w[i-1]*((d-i+1)/i))
-        i+=1
-        print(w.sum())
-    return w
 
-def fracDiff(input_data, test_col, fraction, cutoffWindow, afdMaxLag):
-    temp_data = pd.Series()
-    weights = fractionalWeights(cutoffWindow,fraction)
-    for i in range (cutoffWindow,input_data.shape[0]):
-        temp_data[input_data.index[i]] = (input_data.loc[:,test_col].iloc[-1*cutoffWindow+i:i]).dot(np.flipud(weights))
-        #print(-1*cutoffWindowDaily+i)
-    #print(i)
-    result = adfuller(temp_data, autolag='AIC')
-    return temp_data, result[1]
+def loadDimensions(filename):
+    dimensionFile = open(filename, 'rb')
+    tmp = pickle.load(dimensionFile)
+    dimensionFile.close()
+    return tmp
+
+def scanAndStore(window, filename):
+    dimensionFile = open(filename, 'wb')
+    res = frac.fracDiffScan(tickerDF, 'logPx', test_stocks, window, .9, 50, .01, 200)
+    pickle.dump(res, dimensionFile)
+    dimensionFile.close()
+    return res
+
+
+# def fractionalWeights(k, d):
+#     w = np.array([1.0], dtype=float)
+#     for i in range(1,k):
+#         w = np.append(w, -1*w[i-1]*((d-i+1)/i))
+#     print(w.sum())
+#     return w
+
+# #sum asymptotically approaches 0. It is 1 + series of negative numbers
+# def fractionalWeightsCutoff(d, cutoff):
+#     w = np.array([1.0], dtype=float)
+#     i=1
+#     while (w.sum()>cutoff):
+#         w = np.append(w, -1*w[i-1]*((d-i+1)/i))
+#         i+=1
+#         print(w.sum())
+#     return w
+
+# def fracDiff(input_data, test_col, fraction, cutoffWindow, afdMaxLag):
+#     temp_data = pd.Series()
+#     weights = fractionalWeights(cutoffWindow,fraction)
+#     for i in range (cutoffWindow,input_data.shape[0]):
+#         temp_data[input_data.index[i]] = (input_data.loc[:,test_col].iloc[-1*cutoffWindow+i:i]).dot(np.flipud(weights))
+#         #print(-1*cutoffWindowDaily+i)
+#     #print(i)
+#     result = adfuller(temp_data, autolag='AIC')
+#     return temp_data, result[1]
 
 
 #Pick stocks for analysis
@@ -138,6 +158,36 @@ print('slow speed ADF p-stat: ' + str(adf_res_medium))
 medium_signal = (medium_FD-medium_FD.mean())#/medium_FD.std()
 plt.plot(medium_FD.iloc[-500:])
 plt.plot(medium_FD.rolling(30).mean())
+
+
+
+
+
+#calculate and store fractional dimensions or just load them    
+#dimensions_long_term = scanAndStore(800, dimensionFile_long_term)
+#dimensions_month = scanAndStore(30, 'dimensions_month.obj')
+dimensions_month = loadDimensions('dimensions_month.obj')
+dimensions_long_term = loadDimensions('dimensions_long_term.obj')
+
+
+squareSize = int(np.ceil(np.sqrt(len(test_stocks))))
+sns.set(style="darkgrid")
+fig = plt.figure(figsize=(9,9), dpi=300)
+for i, ticker in enumerate(test_stocks):
+    input_table = (frac.fracDiff(tickerDF[ticker], 'logPx', dimensions_month[1][ticker], 30, 200)[0])[-200:]
+    plot_data = (input_table - input_table.mean())/input_table.std()
+    ax = plt.subplot(squareSize,squareSize,i+1)
+    ax.title.set_text(ticker)
+    for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+        label.set_fontname('Arial')
+        label.set_fontsize(8)
+    sns.lineplot(data=input_table,  color='xkcd:jade')
+fig.tight_layout(rect=[0, 0.03, 1, 0.95])    
+
+
+    
+
+
 
 
 # temp_data = pd.Series()
