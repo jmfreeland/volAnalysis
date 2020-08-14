@@ -59,34 +59,6 @@ def scanAndStore(window, filename):
     return res
 
 
-# def fractionalWeights(k, d):
-#     w = np.array([1.0], dtype=float)
-#     for i in range(1,k):
-#         w = np.append(w, -1*w[i-1]*((d-i+1)/i))
-#     print(w.sum())
-#     return w
-
-# #sum asymptotically approaches 0. It is 1 + series of negative numbers
-# def fractionalWeightsCutoff(d, cutoff):
-#     w = np.array([1.0], dtype=float)
-#     i=1
-#     while (w.sum()>cutoff):
-#         w = np.append(w, -1*w[i-1]*((d-i+1)/i))
-#         i+=1
-#         print(w.sum())
-#     return w
-
-# def fracDiff(input_data, test_col, fraction, cutoffWindow, afdMaxLag):
-#     temp_data = pd.Series()
-#     weights = fractionalWeights(cutoffWindow,fraction)
-#     for i in range (cutoffWindow,input_data.shape[0]):
-#         temp_data[input_data.index[i]] = (input_data.loc[:,test_col].iloc[-1*cutoffWindow+i:i]).dot(np.flipud(weights))
-#         #print(-1*cutoffWindowDaily+i)
-#     #print(i)
-#     result = adfuller(temp_data, autolag='AIC')
-#     return temp_data, result[1]
-
-
 #Pick stocks for analysis
 test_stocks = ['SPY', 'TLT', 'IEF','TOTL','BSV','XLU','IGV','USRT','QQQ','GLD','GDX','MBB','KBA','KWEB','IPO','XBI','ERUS','NORW','MOO','TIP','EEM']
 tickerData = {}
@@ -139,29 +111,6 @@ for ticker in test_stocks:
 
     #plotTicker='IEF'
     #sns.lineplot(x=tickerDF[ticker].index, y=tickerDF[ticker].loc[:,'chgRatio'])
-
-
-# #fractional Differentiation    
-# ticker='SPY'
-# slow_speed = .4
-# slow_window = 900
-# tickerDF[ticker].loc[:,'LogPx'] = np.log(tickerDF[ticker].loc[:,'Close'])
-# [slow_FD, adf_res] = fracDiff(tickerDF['SPY'],'Close', slow_speed, slow_window, 250)
-# print('slow speed ADF p-stat: ' + str(adf_res))
-# plt.plot(slow_FD.rolling(30).mean())
-
-# #fractional Differentiation    
-# ticker='SPY'
-# medium_speed = .625
-# medium_window = 400
-# tickerDF[ticker].loc[:,'LogPx'] = np.log(tickerDF[ticker].loc[:,'Close'])
-# [medium_FD, adf_res_medium] = fracDiff(tickerDF['SPY'],'LogPx', medium_speed, medium_window, 100)
-# print('slow speed ADF p-stat: ' + str(adf_res_medium))
-# medium_signal = (medium_FD-medium_FD.mean())#/medium_FD.std()
-# plt.plot(medium_FD.iloc[-500:])
-# plt.plot(medium_FD.rolling(30).mean())
-
-
 
 
 
@@ -217,36 +166,3 @@ fig.tight_layout(rect=[0, 0.03, 1, 0.95])
 
 
 
-
-
-# temp_data = pd.Series()
-# weights = fractionalWeights(cutoffWindowDaily,fraction)
-# tickerDF[ticker].loc[:,'LogPx'] = np.log(tickerDF[ticker].loc[:,'Close'])
-# tickerDF[ticker].loc[:,'LogPx'].iloc[-1*cutoffWindowDaily:].dot(weights)
-# for i in range (cutoffWindowDaily,tickerDF[ticker].shape[0]):
-#     temp_data[tickerDF[ticker].index[i]] = (tickerDF[ticker].loc[:,'LogPx'].iloc[-1*cutoffWindowDaily+i:i]).dot(weights)
-#     #print(-1*cutoffWindowDaily+i)
-#     print(i)
-
-# temp_data = temp_data - temp_data.mean()
-# integrated_data = pd.Series()
-# weights = fractionalWeights(cutoffWindowDaily,-1*fraction)
-# for i in range (cutoffWindowDaily, temp_data.shape[0]):
-#     integrated_data[tickerDF[ticker].index[i]] = (temp_data.iloc[i-cutoffWindowDaily:i]).dot(weights)
-#     #print(-1*cutoffWindowDaily+i)
-#     print(i)
-# result = adfuller(temp_data)
-# print(result[1])
-# plt.plot(temp_data) 
-
-
-# fracDiff(tickerDF['SPY'],'LogPx', .42, 900, 50)
-
-# # #any use to this stuff?
-# # ticker='XLU'
-# # tickerDF[ticker].loc[:,'LogPx'] = np.log(tickerDF[ticker].loc[:,'Close'])
-# # plt.plot(tickerDF[ticker].loc[:,'Volume'].cumsum(),tickerDF[ticker].loc[:,'LogPx'])
-# # plt.plot(tickerDF[ticker].loc[:,'LogPx'])
-# # plt.plot(tickerDF[ticker].loc[:,'Volume'].cumsum())
-# ticker='BSV'
-# nolds.hurst_rs(tickerDF[ticker].loc[:,'Close'].values, debug_data=True, debug_plot=True)
