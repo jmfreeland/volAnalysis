@@ -22,6 +22,8 @@ todo: predict returns and vol from trailing levels, predict drawdown via logisti
 -vol driven trend signal?
 -defensive/offensive outperformance switching a la ATAC fund
 -implied vol discount
+-empirical distribution of signal values instead of any stdev
+-correlation of signals to USD, volume, etc
 """
 
 #import external libraries
@@ -41,7 +43,7 @@ import nolds
 import pickle
 
 import fracDiffTest as frac
-
+import helperFunctionsTrading as trhelp
 
 def loadDimensions(filename):
     dimensionFile = open(filename, 'rb')
@@ -51,7 +53,7 @@ def loadDimensions(filename):
 
 def scanAndStore(window, filename):
     dimensionFile = open(filename, 'wb')
-    res = frac.fracDiffScan(tickerDF, 'logPx', test_stocks, window, .9, 50, .01, 200)
+    res = frac.fracDiffScan(tickerDF, 'logPx', test_stocks, window, .9, 50, .001, 1000)
     pickle.dump(res, dimensionFile)
     dimensionFile.close()
     return res
@@ -86,7 +88,7 @@ def scanAndStore(window, filename):
 
 
 #Pick stocks for analysis
-test_stocks = ['SPY', 'TLT', 'IEF','TOTL','BSV','XLU','XLP','DEF','QQQ','GLD','SPLV','MBB','QUAL','SPHD','LQD','VCLT']
+test_stocks = ['SPY', 'TLT', 'IEF','TOTL','BSV','XLU','IGV','USRT','QQQ','GLD','GDX','MBB','KBA','KWEB','IPO','XBI','ERUS','NORW','MOO','TIP','EEM']
 tickerData = {}
 tickerDF = {}
 averageChange = {}
@@ -139,25 +141,25 @@ for ticker in test_stocks:
     #sns.lineplot(x=tickerDF[ticker].index, y=tickerDF[ticker].loc[:,'chgRatio'])
 
 
-#fractional Differentiation    
-ticker='SPY'
-slow_speed = .4
-slow_window = 900
-tickerDF[ticker].loc[:,'LogPx'] = np.log(tickerDF[ticker].loc[:,'Close'])
-[slow_FD, adf_res] = fracDiff(tickerDF['SPY'],'Close', slow_speed, slow_window, 250)
-print('slow speed ADF p-stat: ' + str(adf_res))
-plt.plot(slow_FD.rolling(30).mean())
+# #fractional Differentiation    
+# ticker='SPY'
+# slow_speed = .4
+# slow_window = 900
+# tickerDF[ticker].loc[:,'LogPx'] = np.log(tickerDF[ticker].loc[:,'Close'])
+# [slow_FD, adf_res] = fracDiff(tickerDF['SPY'],'Close', slow_speed, slow_window, 250)
+# print('slow speed ADF p-stat: ' + str(adf_res))
+# plt.plot(slow_FD.rolling(30).mean())
 
-#fractional Differentiation    
-ticker='SPY'
-medium_speed = .625
-medium_window = 400
-tickerDF[ticker].loc[:,'LogPx'] = np.log(tickerDF[ticker].loc[:,'Close'])
-[medium_FD, adf_res_medium] = fracDiff(tickerDF['SPY'],'LogPx', medium_speed, medium_window, 100)
-print('slow speed ADF p-stat: ' + str(adf_res_medium))
-medium_signal = (medium_FD-medium_FD.mean())#/medium_FD.std()
-plt.plot(medium_FD.iloc[-500:])
-plt.plot(medium_FD.rolling(30).mean())
+# #fractional Differentiation    
+# ticker='SPY'
+# medium_speed = .625
+# medium_window = 400
+# tickerDF[ticker].loc[:,'LogPx'] = np.log(tickerDF[ticker].loc[:,'Close'])
+# [medium_FD, adf_res_medium] = fracDiff(tickerDF['SPY'],'LogPx', medium_speed, medium_window, 100)
+# print('slow speed ADF p-stat: ' + str(adf_res_medium))
+# medium_signal = (medium_FD-medium_FD.mean())#/medium_FD.std()
+# plt.plot(medium_FD.iloc[-500:])
+# plt.plot(medium_FD.rolling(30).mean())
 
 
 
@@ -167,25 +169,52 @@ plt.plot(medium_FD.rolling(30).mean())
 #dimensions_long_term = scanAndStore(800, dimensionFile_long_term)
 #dimensions_month = scanAndStore(30, 'dimensions_month.obj')
 dimensions_month = loadDimensions('dimensions_month.obj')
-dimensions_long_term = loadDimensions('dimensions_long_term.obj')
+#dimensions_long_term = loadDimensions('dimensions_long_term.obj')
 
-
+#change to signal data
 squareSize = int(np.ceil(np.sqrt(len(test_stocks))))
 sns.set(style="darkgrid")
 fig = plt.figure(figsize=(9,9), dpi=300)
+signal = {}
+signal_percentile={}
 for i, ticker in enumerate(test_stocks):
-    input_table = (frac.fracDiff(tickerDF[ticker], 'logPx', dimensions_month[1][ticker], 30, 200)[0])[-200:]
-    plot_data = (input_table - input_table.mean())/input_table.std()
+    input_table = (frac.fracDiff(tickerDF[ticker], 'logPx', dimensions_month[1][ticker], 30, 200)[0])#[-200:]
+    signal[ticker] = ((input_table - input_table.rolling(30).mean())/input_table.rolling(30).std()).dropna()
+    signal_percentile[ticker] = signal[ticker].rank(pct=True)
+    #trhelp.get_best_distribution(plot_data)
     ax = plt.subplot(squareSize,squareSize,i+1)
     ax.title.set_text(ticker)
     for label in (ax.get_xticklabels() + ax.get_yticklabels()):
         label.set_fontname('Arial')
         label.set_fontsize(8)
-    sns.lineplot(data=input_table,  color='xkcd:jade')
+    sns.lineplot(data=signal[ticker][-60:],  color='xkcd:jade')
 fig.tight_layout(rect=[0, 0.03, 1, 0.95])    
 
 
-    
+fig = plt.figure(figsize=(9,9), dpi=300)
+for i, ticker in enumerate(test_stocks):
+    ax = plt.subplot(squareSize,squareSize,i+1)
+    ax.title.set_text(ticker)
+    for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+        label.set_fontname('Arial')
+        label.set_fontsize(8)
+    sns.distplot(signal[ticker],  color='xkcd:deep blue')
+fig.tight_layout(rect=[0, 0.03, 1, 0.95])    
+
+
+fig = plt.figure(figsize=(9,9), dpi=300)
+for i, ticker in enumerate(test_stocks):
+    ax = plt.subplot(squareSize,squareSize,i+1)
+    ax.title.set_text(ticker)
+    for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+        label.set_fontname('Arial')
+        label.set_fontsize(8)
+    sns.lineplot(data = signal_percentile[ticker][-30:],  color='xkcd:pine green')
+fig.tight_layout(rect=[0, 0.03, 1, 0.95])    
+
+
+
+
 
 
 
