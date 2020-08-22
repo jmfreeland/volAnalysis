@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 
 #Pick stocks for analysis
-test_stocks = ['SPY', 'TLT', 'IEF','TOTL','BSV','XLU','XLP','DEF','QQQ','GLD','SPLV','MBB','QUAL','SPHD','LQD','VCLT']
+test_stocks = ['SPY', 'TLT', 'IEF','TOTL','BSV','XLU','XLP','DEF','QQQ','GDX','SPLV','MBB','QUAL','SPHD','LQD','VCLT']
 tickerData = {}
 tickerDF = {}
 drawdownCutoff = {}

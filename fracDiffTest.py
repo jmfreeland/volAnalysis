@@ -44,9 +44,26 @@ def fracDiff(input_data, test_col, fraction, cutoffWindow, afdMaxLag):
     for i in range (cutoffWindow,input_data.shape[0]):
         temp_data[input_data.index[i]] = (input_data.loc[:,test_col].iloc[-1*cutoffWindow+i:i]).dot(np.flipud(weights))
         #print(-1*cutoffWindowDaily+i)
-    #print(i)
+    #debug code
+    #print(i)3
+    #print(str(input_data.loc[:,test_col].iloc[-1*cutoffWindow+1:i]))
+    #print(np.flipud(weights))
     result = adfuller(temp_data, autolag='AIC')
     return temp_data, result[1]
+
+def fracDiffDebug(input_data, test_col, fraction, cutoffWindow, afdMaxLag, point):
+    temp_data = pd.Series()
+    weights = fractionalWeights(cutoffWindow,fraction)
+    for i in range (cutoffWindow,input_data.shape[0]):
+        temp_data[input_data.index[i]] = (input_data.loc[:,test_col].iloc[-1*cutoffWindow+i:i]).dot(np.flipud(weights))
+        print(str(i))
+    #debug code
+    #print(i)
+    #print(str(input_data.loc[:,test_col].iloc[-1*cutoffWindow+1:i]))
+    #print(np.flipud(weights))
+    result = adfuller(temp_data, autolag='AIC')
+    return temp_data[point], (input_data.loc[:,test_col].iloc[point+1:cutoffWindow+1+point]), np.flipud(weights) 
+
 
 def fracDiffOpt(input_data, test_col, fixed_window, starting_dim, increments, cutoff, max_lags ):
     res = 0

@@ -22,8 +22,11 @@ todo: predict returns and vol from trailing levels, predict drawdown via logisti
 -vol driven trend signal?
 -defensive/offensive outperformance switching a la ATAC fund
 -implied vol discount
--empirical distribution of signal values instead of any stdev
--correlation of signals to USD, volume, etc
+-correlation of signals to USD, volume, etc-
+-backtester 
+-commitment of traders?
+-weighting volatility like prices?
+-Ratios Signals
 """
 
 #import external libraries
@@ -60,7 +63,7 @@ def scanAndStore(window, filename):
 
 
 #Pick stocks for analysis
-test_stocks = ['SPY', 'TLT', 'IEF','TOTL','BSV','XLU','IGV','USRT','QQQ','GLD','GDX','MBB','KBA','KWEB','IPO','XBI','ERUS','NORW','MOO','TIP','EEM']
+test_stocks = ['SPY', 'TLT', 'IEF','TOTL','BSV','XLU','IGV','USRT','QQQ','GLD','GDX','MBB','KBA','KWEB','IPO','XBI','ERUS','NORW','MOO','TIP','LTPZ','EEM','GBTC','UUP','GCC']
 tickerData = {}
 tickerDF = {}
 averageChange = {}

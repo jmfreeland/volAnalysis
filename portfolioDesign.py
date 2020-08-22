@@ -25,6 +25,10 @@ ToDo: -Improve length of data
       -Pull in schiller CAPE
       -Rolling vol analysis (rates, stocks, etc)
       -Correlate rates to price vol
+      -Simon ward Switching models
+      -Simon Ward Portfolio theory model
+      -Real Rates / Breakevens
+      -Position Sizing
     
 Rationale: Shoot for a target Sharpe ratio of 2. Accept net long risk in proportion to estimated
             returns available. As estimated return increases (assets are cheap), increase 
